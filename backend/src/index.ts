@@ -2,7 +2,9 @@ import express from "express"
 import {ENV} from "./config/env"
 import cors from "cors"
 import { clerkMiddleware } from '@clerk/express'
-
+import userRoutes from "./routes/userRoutes"
+import productRoutes from "./routes/productRoutes"
+import commentRoutes from "./routes/commentRoutes"
 const app=express();
 
 
@@ -16,11 +18,14 @@ app.get("/",(req,res)=>{
     res.json({
         message:"PostgreSQL with Express and TypeScript",
         endpoints:{
-            users:"api/users",
-            products:"api/products",
-            comments:"api/comments",
+            users:"/api/users",
+            products:"/api/products",
+            comments:"/api/comments",
 
         }
     })
 })
+app.use("/api/users",userRoutes);
+app.use("/api/products",productRoutes);
+app.use("/api/comments",commentRoutes);
 app.listen(ENV.PORT,()=>console.log("Server is up and running on port:",ENV.PORT))
