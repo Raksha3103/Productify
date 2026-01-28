@@ -19,12 +19,18 @@ export const updateUser=async(id:string,data:Partial<NewUser>)=>{
 
 }
 export const upsertUser=async(data:NewUser)=>{
-    const existingUser=await getUserById(data.id);
-    if(existingUser){
-        return updateUser(data.id,data);
+    // const existingUser=await getUserById(data.id);
+    // if(existingUser){
+    //     return updateUser(data.id,data);
     
-    }
-    return createUser(data);
+    // }
+    // return createUser(data);
+    const [user]=await db.insert(users).values(data).onConflictDoUpdate({
+        target:users.id,
+        set:data,
+    })
+    .returning();
+    return user;
 
 }
 //product queries
@@ -33,7 +39,8 @@ export const createProduct=async(data:NewProduct)=>{
     return product;
 }
 export const getProductById=async(id:string)=>{
-    return db.query.products.findFirst({where:eq(products.id,id),with:{user:true,comments:{with:{user:true},orderBy:(comments,{desc})=>[desc(comments.createdAt)]}}}    );
+    return db.query.products.findFirst({where:eq(products.id,id),
+        with:{user:true,comments:{with:{user:true},orderBy:(comments,{desc})=>[desc(comments.createdAt)]}}}    );
 }   
 export const getAllProducts=async()=>{
     return db.query.products.findMany({with:{user:true},orderBy:(products,{desc})=>[desc(products.createdAt)]});    
@@ -58,11 +65,10 @@ export const createComment=async(data:NewComment)=>{
     return comment;
 }
 
-export const getCommentsById=async(id:string)=>{
-    return db.query.comments.findMany({
+export const getCommentById=async(id:string)=>{
+    return db.query.comments.findFirst({
         where:eq(comments.id,id),
-        with:{user:true},
-        orderBy:(comments,{desc})=>[desc(comments.createdAt)]});
+        with:{user:true}});
 }
 export const deleteComment=async(id:string)=>{
     const [comment]=await db.delete(comments).where(eq(comments.id,id)).returning();
